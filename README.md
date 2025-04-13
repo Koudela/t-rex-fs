@@ -1,0 +1,111 @@
+# t-rex4js-fs
+
+Filesystem abstraction layer for t-rex4js
+
+This repository is inspired by [parameterized-fs-routing](https://github.com/Koudela/parameterized-fs-routing).
+
+## Purpose
+
+This repository targets 5 main use cases:
+
+1. Template resolver for t-rex
+2. Context resolver for t-rex
+3. Router for apps using t-rex
+4. Distributed dependency injection layer
+5. Lightweight app framework based on t-rex
+
+## Installation
+
+```bash
+npm install t-rex4js-fs
+```
+
+## Usage
+
+```js
+const options = {
+    templateBaseDirs: [
+        ['t-overwrites', '/home/plugins/my-theme-adjustments/templates'],
+        ['t-theme', '/home/plugins/my-theme/templates'],
+        ['t-app', '/home/apps/my-app/routing'],
+    ],
+    contextBaseDirs: [
+        ['c-overwrites', '/home/plugins/my-theme-adjustments/context'],
+        ['c-theme', '/home/plugins/my-theme/context'],
+        ['c-app','/home/apps/my-app/routing'],
+    ],
+    entrypoint: 'main',
+    debugMarks: false,
+    hotUpdate: process.env.NODE_ENV !== 'production',
+    callContextFactory: null,
+    renderingProperty: null,
+    parameterizingProperty: 'params',
+    resourcePathProperty: 'url',
+}
+const router = new tRexFS(options)
+const page = await router->render('/some/url/or/resource/path')
+```
+
+```js
+// some/template/path/template.js
+
+export default {
+    // t-rex template code goes here
+}
+```
+
+```js
+// some/context/path/context.js
+
+export default {
+    // t-rex context code goes here
+}
+```
+
+Remarks: 
+
+1. There is no explicit id. The relative path followed by `/t` or `/c` is the base id of the template/context, e.g `some/context/path/c`. The t-rex template/context id is the base id followed by `@` followed by the directory id, e.g.
+`some/context/path/c@c-theme`.
+2. The parent property has to hold the parents base id (e.g. `some/template/path/t`) not the template/context object itself. 
+4. All templates/context with the same base id have to use the same parent.
+3. The order of the directories matters. Exists a template/context with the same path in multiple directories, the one residing in a directory with a lower index becomes the child, the other one the parent.
+5. If you use an url mapping use a public and a private directory. Presumably not all templates/context will be used as entrypoint.
+6. Templates/context ignore the javascript prototype chain. Only the first layer of properties is processed. 
+
+## The calling context
+
+To be able to pass call specific data or logic, every rendering call needs its own starting context.
+
+You can provide a context factory for this or pass it as second argument to the rendering function. The one passed by the rendering call takes precedence before the one provided by the context factory. 
+
+If no id is given it is set to `call/c`.
+
+The first parameter of the render function is always stored within the calling context. The corresponding property name can be set via the `resourcePathProperty` option. If no name is given `url` is used.
+
+## Parameterizing directories
+
+Directory names starting with a colon (:) are treated as parameters. E.g. the given resource path is `public/admin/board/201/87` and the 
+ matching template is `public/admin/board/:board-id/:user-id/template.js` and the matching context is `public/admin/context.js`
+ then the following parameter object is generated: `{ 'board-id':'201', 'user-id':'87' }`.
+
+Exact matches are prefered to parameterizing directories. Thus parameterizing directories can be used as fallback.
+
+If there is more than one matching parameterizing directory the match is arbitrary.
+
+The parameter object is stored in the calling context. The corresponding property name can be set via the `parameterizingProperty` option. If no parameterizing property is given it is set to `params`.
+
+## Hot update
+
+If the `hotUpdate` option is set to `false` the directories are traversed on initialization of the object and all modules (templates/contexts) are imported. Code changes will not be recognised.
+
+If set to `true` on each `render` call a directory matching is done and the matched modules are (re)imported. Code changes immediately take place.
+
+## Redirectional rendering
+
+The calling context always mirrors the rendering method to `render` or the `renderingProperty` set by the options. Thus rendering a subresource from within a provider function is always possible.
+
+## Mixins
+
+Mixins can be realized via the `mixin` property. The `mixin` property has to be an array of base ids. All properties from the targeted providers will be integrated into the template/context. Duplicated properties will throw an error. 
+
+Mixins do not cross base dir borders. If a mixin is not available within the same base dir an error will be thrown.
