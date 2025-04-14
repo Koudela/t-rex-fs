@@ -1,0 +1,31 @@
+{
+    "name": "t-rex4js-fs",
+    "version": "1.0.0",
+    "description": "Filesystem abstraction layer for t-rex4js",
+    "main": "index.js",
+    "scripts": {
+        "test": "ava"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/koudela/t-rex-fs.git"
+    },
+    "keywords": [
+        "template",
+        "engine",
+        "rendering",
+        "inheritance",
+        "dependency injection",
+        "overwrite",
+        "framework"
+    ],
+    "author": "Thomas Koudela",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/koudela/t-rex-js/issues"
+    },
+    "homepage": "https://github.com/koudela/t-rex-js#readme",
+    "devDependencies": {
+        "ava": "^6.2.0"
+    }
+}

@@ -1,6 +1,6 @@
 # t-rex4js-fs
 
-Filesystem abstraction layer for t-rex4js
+Filesystem abstraction layer for [t-rex4js](https://github.com/Koudela/t-rex)
 
 This repository is inspired by [parameterized-fs-routing](https://github.com/Koudela/parameterized-fs-routing).
 
@@ -39,15 +39,16 @@ const options = {
     hotUpdate: process.env.NODE_ENV !== 'production',
     callContextFactory: null,
     renderingProperty: null,
-    parameterizingProperty: 'params',
     resourcePathProperty: 'url',
 }
 const router = new tRexFS(options)
 const page = await router->render('/some/url/or/resource/path')
 ```
 
+You can use module syntax in your providers.
+
 ```js
-// some/template/path/template.js
+// some/template/path/template.mjs
 
 export default {
     // t-rex template code goes here
@@ -55,9 +56,27 @@ export default {
 ```
 
 ```js
-// some/context/path/context.js
+// some/context/path/context.mjs
 
 export default {
+    // t-rex context code goes here
+}
+```
+
+Or to use commonJS syntax choose the `.js` file ending.
+
+```js
+// some/template/path/template.js
+
+module.exports = {
+    // t-rex template code goes here
+}
+```
+
+```js
+// some/context/path/context.js
+
+module.exports {
     // t-rex context code goes here
 }
 ```
@@ -82,30 +101,23 @@ If no id is given it is set to `call/c`.
 
 The first parameter of the render function is always stored within the calling context. The corresponding property name can be set via the `resourcePathProperty` option. If no name is given `url` is used.
 
-## Parameterizing directories
-
-Directory names starting with a colon (:) are treated as parameters. E.g. the given resource path is `public/admin/board/201/87` and the 
- matching template is `public/admin/board/:board-id/:user-id/template.js` and the matching context is `public/admin/context.js`
- then the following parameter object is generated: `{ 'board-id':'201', 'user-id':'87' }`.
-
-Exact matches are prefered to parameterizing directories. Thus parameterizing directories can be used as fallback.
-
-If there is more than one matching parameterizing directory the match is arbitrary.
-
-The parameter object is stored in the calling context. The corresponding property name can be set via the `parameterizingProperty` option. If no parameterizing property is given it is set to `params`.
-
 ## Hot update
 
-If the `hotUpdate` option is set to `false` the directories are traversed on initialization of the object and all modules (templates/contexts) are imported. Code changes will not be recognised.
+If the `hotUpdate` option is set to `false` the directories are traversed on initialization of the object and all modules (templates/contexts) are imported. Code changes will not be recognised. `init()` has to be called once before rendering.
 
-If set to `true` on each `render` call a directory matching is done and the matched modules are (re)imported. Code changes immediately take place.
+```js
+await router->init() // initializes the cache
+```
+
+If set to `true` initialisation is not necessary. On each `render` call a directory matching is done and the matched modules are (re)imported. Code changes immediately take place.
+
 
 ## Redirectional rendering
 
-The calling context always mirrors the rendering method to `render` or the `renderingProperty` set by the options. Thus rendering a subresource from within a provider function is always possible.
+The calling context always mirrors the rendering method to `render` or the property set by the `renderingProperty` option. Thus rendering a subresource from within a provider function is always possible.
 
 ## Mixins
 
 Mixins can be realized via the `mixin` property. The `mixin` property has to be an array of base ids. All properties from the targeted providers will be integrated into the template/context. Duplicated properties will throw an error. 
 
-Mixins do not cross base dir borders. If a mixin is not available within the same base dir an error will be thrown.
+Mixins do not cross base directory borders. If a mixin is not available within the same base directory an error will be thrown.
