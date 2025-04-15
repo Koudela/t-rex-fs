@@ -27,5 +27,8 @@
     "homepage": "https://github.com/koudela/t-rex-js#readme",
     "devDependencies": {
         "ava": "^6.2.0"
+    },
+    "dependencies": {
+        "t-rex4js": "^1.1.0"
     }
 }
